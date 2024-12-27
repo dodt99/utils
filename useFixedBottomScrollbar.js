@@ -38,7 +38,7 @@ const useFixedBottomScrollbar = (elSelector = ".fixed-scrollbar") => {
       return element;
     };
 
-    const setScrollbarStyle = () => {
+    const updateScrollbarStyle = () => {
       if (activeElement) {
         scrollbar.style.left =
           activeElement.getBoundingClientRect().left + window.scrollX + "px";
@@ -51,24 +51,26 @@ const useFixedBottomScrollbar = (elSelector = ".fixed-scrollbar") => {
       }
     };
 
-    const setScrollbarLeft = () => {
+    const updateScrollbarLeft = () => {
       scrollbar.scrollLeft = activeElement.scrollLeft;
     };
 
     const listenObserver = () => {
+      const newActiveElement = findActiveElement();
+      const isChangeActive = activeElement !== newActiveElement;
+
       //Cleanup old activeElement
-      if (activeElement) {
-        activeElement.removeEventListener("scroll", setScrollbarLeft);
+      if (activeElement && isChangeActive) {
+        activeElement.removeEventListener("scroll", updateScrollbarLeft);
       }
 
-      //Find new activeElement
-      activeElement = findActiveElement();
+      activeElement = newActiveElement;
 
-      //Update scrollbar
-      setScrollbarStyle();
-      if (activeElement) {
-        setScrollbarLeft();
-        activeElement.addEventListener("scroll", setScrollbarLeft);
+      updateScrollbarStyle();
+
+      if (newActiveElement && isChangeActive) {
+        updateScrollbarLeft();
+        activeElement.addEventListener("scroll", updateScrollbarLeft);
       }
     };
 
@@ -83,7 +85,6 @@ const useFixedBottomScrollbar = (elSelector = ".fixed-scrollbar") => {
     scrollbar.addEventListener("scroll", onScrollbarScroll);
 
     return () => {
-      scrollbar.removeEventListener("scroll", onScrollbarScroll);
       scrollbar.remove();
       window.removeEventListener("scroll", listenObserver);
       resizeObserver.disconnect();
